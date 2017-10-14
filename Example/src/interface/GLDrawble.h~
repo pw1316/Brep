@@ -1,0 +1,62 @@
+#ifndef GLDRAWBLE_H_
+#define GLDRAWBLE_H_
+
+#include <GL/gl.h>
+#include "cmath"
+
+inline float degrees(float radians)
+{ return 180.0 * radians * M_1_PI; }
+
+inline float radians(float degrees)
+{ return degrees * M_PI/180.0; }
+
+union PickingUnion
+{
+    PickingUnion()
+    {
+        ptr = 0;
+        data[0] = data[1] = 0;
+    }
+
+    void *ptr;
+    unsigned int data[2];
+};
+
+
+class GLDrawble
+{
+public:
+    GLDrawble() :
+        rgb({0.5, 0.5, 0.5})
+    {}
+
+	virtual void draw() = 0;
+
+	virtual void handlePick(){}
+
+    void drawForPicking()
+    {
+        PickingUnion un;
+        un.ptr = this;
+
+        glLoadName(un.data[0]);
+        glPushName(un.data[1]);
+
+        draw();
+    }
+
+    void setRGB(float r, float g, float b)
+    {
+        rgb[0] = r;
+        rgb[1] = g;
+        rgb[2] = b;
+    }
+
+protected:
+    void applyColor()
+    { glColor3fv(rgb); }
+
+    float rgb[3];
+};
+
+#endif /* GLDRAWBLE_H_ */
