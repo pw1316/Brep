@@ -113,10 +113,12 @@
   <ItemGroup>
     <ClInclude Include="brep.h" />
     <ClInclude Include="brep_list.hpp" />
+    <ClInclude Include="dumpGL.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="brep.cpp" />
     <ClCompile Include="brep_list.cpp" />
+    <ClCompile Include="dumpGL.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

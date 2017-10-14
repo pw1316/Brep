@@ -1,28 +1,27 @@
 #pragma once
 
-#include <QtOpenGL>
-#include "Scene.h"
-#include "bezier.h"
+#include <Windows.h>
+#include <gl/GL.h>
+#include <corecrt_math_defines.h>
 #include <set>
 
 
-inline float degrees(float radians)
+__forceinline float degrees(float radians)
 {
     return 180.0 * radians * M_1_PI;
 }
 
-inline float radians(float degrees)
+__forceinline float radians(float degrees)
 {
     return degrees * M_PI / 180.0;
 }
 
 enum Mode { EDIT, DRAW };
-class GLWidget : public QGLWidget
-{
-    Q_OBJECT
 
+class GLWidget
+{
 public:
-    GLWidget(QWidget *parent = 0);
+    GLWidget();
     ~GLWidget();
 
     void switchMode();
@@ -37,12 +36,12 @@ public:
 
     void sweep(float dX, float dY, float dZ);
 
-    Scene scene;
-    Scene drawScene;
+    int scene;//Scene
+    int drawScene;//Scene
 
-    Bezier curve;
+    int curve;//Bezier
 
-    public slots:
+    // public slots:
     void showGrid(bool);
     void setPerspective(bool);
 
@@ -51,13 +50,13 @@ protected:
     void paintGL();
     void resizeGL(int width, int height);
 
-    void mousePressEvent(QMouseEvent *event);
-    void mouseMoveEvent(QMouseEvent *event);
-    void mouseReleaseEvent(QMouseEvent * event);
-    void wheelEvent(QWheelEvent* event);
-    void keyPressEvent(QKeyEvent *);
+    void mousePressEvent();
+    void mouseMoveEvent();
+    void mouseReleaseEvent();
+    void wheelEvent();
+    void keyPressEvent();
 
-    protected Q_SLOTS:
+    // protected Q_SLOTS:
     void deleteMesh();
     void move();
     void moveNormal();
@@ -94,8 +93,8 @@ private:
 
     enum
     {
-        SPIN_BUTTON = Qt::LeftButton,
-        PICK_BUTTON = Qt::RightButton
+        SPIN_BUTTON = 0,//Left
+        PICK_BUTTON = 1//Right
     };
 
     Mode currentMode;
@@ -104,10 +103,10 @@ private:
     bool startBezier;
     int numPts;
 
-    std::set<Mesh*> meshList;
-    std::set<Loop*> faceList;
-    std::set<Edge*> edgeList;
-    std::set<Vertex*> vertexList;
+    std::set<BSolid*> meshList;
+    std::set<BLoop*> faceList;
+    std::set<BEdge*> edgeList;
+    std::set<BVertex*> vertexList;
 
     double curveP1[3];
 

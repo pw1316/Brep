@@ -21,12 +21,18 @@
     <ClInclude Include="brep_list.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="dumpGL.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="brep_list.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="brep.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="dumpGL.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
