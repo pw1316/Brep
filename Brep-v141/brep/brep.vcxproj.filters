@@ -15,13 +15,16 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="brep.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="brep_list.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="dumpGL.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="brep_struct.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="brep.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

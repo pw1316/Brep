@@ -111,7 +111,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="brep.h" />
+    <ClInclude Include="brep.hpp" />
+    <ClInclude Include="brep_struct.hpp" />
     <ClInclude Include="brep_list.hpp" />
     <ClInclude Include="dumpGL.hpp" />
   </ItemGroup>
