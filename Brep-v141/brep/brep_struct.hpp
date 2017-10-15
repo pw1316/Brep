@@ -22,7 +22,11 @@ struct BVertex
 
 struct BHalfEdge
 {
-    BHalfEdge(){}
+    BHalfEdge()
+    {
+        node.next = nullptr;
+        node.prev = nullptr;
+    }
 
     BrepListNode node;
     BVertex *vertex = nullptr;
@@ -40,9 +44,9 @@ struct BEdge
 
 struct BLoop
 {
-    BLoop() {}
+    BLoop() { brep_list_clear(&halfEdges); }
 
-    BHalfEdge *halfEdge = nullptr;
+    BrepList halfEdges;
     BFace *face;
 };
 
