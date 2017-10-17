@@ -7,7 +7,7 @@ public:
     Brep() {}
 
     void mvfs(float x, float y, float z);
+    BHalfEdge *mev(BLoop *loop, BVertex *vertex, float x, float y, float z);
 
-private:
     std::list<BSolid *> solids;
 };

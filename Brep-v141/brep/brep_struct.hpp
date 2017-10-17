@@ -22,13 +22,10 @@ struct BVertex
 
 struct BHalfEdge
 {
-    BHalfEdge()
-    {
-        node.next = nullptr;
-        node.prev = nullptr;
-    }
+    BHalfEdge() {}
 
-    BrepListNode node;
+    BHalfEdge *prev = nullptr;
+    BHalfEdge *next = nullptr;
     BVertex *vertex = nullptr;
     BEdge *edge = nullptr;
     BLoop *loop = nullptr;
@@ -44,10 +41,10 @@ struct BEdge
 
 struct BLoop
 {
-    BLoop() { brep_list_clear(&halfEdges); }
+    BLoop() {}
 
-    BrepList halfEdges;
-    BFace *face;
+    BHalfEdge *firstHalfEdge = nullptr;
+    BFace *face = nullptr;
 };
 
 struct BFace
@@ -56,7 +53,7 @@ struct BFace
 
     std::list<BLoop *> loops;
     BLoop *outLoop = nullptr;
-    BSolid *solid;
+    BSolid *solid = nullptr;
 };
 
 struct BSolid
