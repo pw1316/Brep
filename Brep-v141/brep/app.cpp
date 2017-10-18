@@ -281,13 +281,9 @@ GLvoid initializeGL(GLsizei width, GLsizei height)
 
     brep = new Brep();
     brep->mvfs(0, 0, -5);
-    brep->dump();
     brep->mev(brep->solids.front()->faces.front()->outLoop, brep->solids.front()->vertices.back(), 1, 0, -5);
-    brep->dump();
     brep->mev(brep->solids.front()->faces.front()->outLoop, brep->solids.front()->vertices.back(), 1, -1, -5);
-    brep->dump();
     brep->mev(brep->solids.front()->faces.front()->outLoop, brep->solids.front()->vertices.back(), 0, -1, -5);
-    brep->dump();
     brep->mef(brep->solids.front()->faces.front()->outLoop, brep->solids.front()->vertices.back(), brep->solids.front()->vertices.front());
     brep->dump();
 }
