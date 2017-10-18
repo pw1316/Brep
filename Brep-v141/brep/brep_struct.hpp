@@ -42,6 +42,7 @@ struct BEdge
 struct BLoop
 {
     BLoop() {}
+    BHalfEdge *findHalfEdgeWithVertex(BVertex *startVertex);
 
     BHalfEdge *firstHalfEdge = nullptr;
     BFace *face = nullptr;

@@ -128,6 +128,7 @@
     <ClCompile Include="app.cpp" />
     <ClCompile Include="brep.cpp" />
     <ClCompile Include="brep_list.cpp" />
+    <ClCompile Include="brep_struct.cpp" />
     <ClCompile Include="dumpGL.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

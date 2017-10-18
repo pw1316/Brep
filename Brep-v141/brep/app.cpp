@@ -3,9 +3,11 @@
 * The OpenGL code is the same as that used in
 * the X Window System sample
 */
-#include <Windows.h> 
-#include <GL/gl.h> 
-#include <GL/glu.h> 
+#include <Windows.h>
+#include <GL/gl.h>
+#include <GL/glu.h>
+
+#include "brep.hpp"
 
 /* Windows globals, defines, and prototypes */
 CHAR szAppName[] = "Win OpenGL";
@@ -18,8 +20,12 @@ HGLRC ghRC;
 #define RED_INDEX       13 
 #define GREEN_INDEX     14 
 #define BLUE_INDEX      16 
-#define WIDTH           300 
-#define HEIGHT          200 
+#define WIDTH           800 
+#define HEIGHT          600
+
+#define FACEMODE 0
+#define LINEMODE 1
+INT renderMode = LINEMODE;
 
 LONG WINAPI MainWndProc(HWND, UINT, WPARAM, LPARAM);
 BOOL bSetupPixelFormat(HDC);
@@ -35,7 +41,8 @@ GLdouble radius;
 GLvoid resize(GLsizei, GLsizei);
 GLvoid initializeGL(GLsizei, GLsizei);
 GLvoid drawScene(GLvoid);
-void polarView(GLdouble, GLdouble, GLdouble, GLdouble);
+
+Brep *brep = nullptr;
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
@@ -260,11 +267,10 @@ GLvoid createObjects()
 
 GLvoid initializeGL(GLsizei width, GLsizei height)
 {
-    GLfloat     maxObjectSize, aspect;
-    GLdouble    near_plane, far_plane;
+    GLfloat aspect;
 
-    //glClearIndex((GLfloat)BLACK_INDEX);
-    //glClearDepth(1.0);
+    glClearIndex((GLfloat)BLACK_INDEX);
+    glClearDepth(1.0);
 
     glEnable(GL_DEPTH_TEST);
 
@@ -273,27 +279,17 @@ GLvoid initializeGL(GLsizei width, GLsizei height)
     gluPerspective(45.0, aspect, 3.0, 7.0);
     glMatrixMode(GL_MODELVIEW);
 
-    near_plane = 3.0;
-    far_plane = 7.0;
-    maxObjectSize = 3.0F;
-    radius = near_plane + maxObjectSize / 2.0;
-
-    latitude = 0.0F;
-    longitude = 0.0F;
-    latinc = 6.0F;
-    longinc = 2.5F;
-
-    createObjects();
-}
-
-void polarView(GLdouble radius, GLdouble twist, GLdouble latitude,
-    GLdouble longitude)
-{
-    glTranslated(0.0, 0.0, -radius);
-    glRotated(-twist, 0.0, 0.0, 1.0);
-    glRotated(-latitude, 1.0, 0.0, 0.0);
-    glRotated(longitude, 0.0, 0.0, 1.0);
-
+    brep = new Brep();
+    brep->mvfs(0, 0, -5);
+    brep->dump();
+    brep->mev(brep->solids.front()->faces.front()->outLoop, brep->solids.front()->vertices.back(), 1, 0, -5);
+    brep->dump();
+    brep->mev(brep->solids.front()->faces.front()->outLoop, brep->solids.front()->vertices.back(), 1, -1, -5);
+    brep->dump();
+    brep->mev(brep->solids.front()->faces.front()->outLoop, brep->solids.front()->vertices.back(), 0, -1, -5);
+    brep->dump();
+    brep->mef(brep->solids.front()->faces.front()->outLoop, brep->solids.front()->vertices.back(), brep->solids.front()->vertices.front());
+    brep->dump();
 }
 
 GLvoid drawScene(GLvoid)
@@ -302,26 +298,49 @@ GLvoid drawScene(GLvoid)
 
     glPushMatrix();
 
-    latitude += latinc;
-    longitude += longinc;
-
-    polarView(radius, 0, latitude, longitude);
-
-    //glIndexi(RED_INDEX);
-    glColor3f(1, 0, 0);
-    glCallList(CONE);
-
-    //glIndexi(BLUE_INDEX);
-    glColor3f(0, 0, 1);
-    glCallList(GLOBE);
-
-    //glIndexi(GREEN_INDEX);
-    glColor3f(0, 1, 0);
-    glPushMatrix();
-    glTranslatef(0.8F, -0.65F, 0.0F);
-    glRotatef(30.0F, 1.0F, 0.5F, 1.0F);
-    glCallList(CYLINDER);
-    glPopMatrix();
+    if (renderMode == FACEMODE)
+    {
+        for (std::list<BSolid *>::iterator solidIt = brep->solids.begin(); solidIt != brep->solids.end(); ++solidIt)
+        {
+            BSolid *solid = *solidIt;
+            for (std::list<BFace *>::iterator faceIt = solid->faces.begin(); faceIt != solid->faces.end(); ++faceIt)
+            {
+                BFace *face = *faceIt;
+                glBegin(GL_TRIANGLE_FAN);
+                BHalfEdge *he = face->outLoop->firstHalfEdge;
+                do
+                {
+                    glVertex3f(he->vertex->x, he->vertex->y, he->vertex->z);
+                    he = he->next;
+                } while (he != face->outLoop->firstHalfEdge);
+                glEnd();
+            }
+        }
+    }
+    else if (renderMode == LINEMODE)
+    {
+        for (std::list<BSolid *>::iterator solidIt = brep->solids.begin(); solidIt != brep->solids.end(); ++solidIt)
+        {
+            BSolid *solid = *solidIt;
+            for (std::list<BFace *>::iterator faceIt = solid->faces.begin(); faceIt != solid->faces.end(); ++faceIt)
+            {
+                BFace *face = *faceIt;
+                glBegin(GL_LINE_LOOP);
+                BHalfEdge *he = face->outLoop->firstHalfEdge;
+                do
+                {
+                    glVertex3f(he->vertex->x, he->vertex->y, he->vertex->z);
+                    he = he->next;
+                } while (he != face->outLoop->firstHalfEdge);
+                glVertex3f(he->vertex->x, he->vertex->y, he->vertex->z);
+                glEnd();
+            }
+        }
+    }
+    else
+    {
+        //Nothing
+    }
 
     glPopMatrix();
 
