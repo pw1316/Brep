@@ -141,6 +141,16 @@ void Brep::mef(BLoop *outLoop, BVertex *vertex1, BVertex *vertex2)
     he2->prev = nhe1;
 }
 
+void Brep::kemr(BLoop *outLoop, BEdge *edge, BVertex *vertexOnOutLoop)
+{
+    assert(edge->halfEdgeA->loop == outLoop);
+    assert(edge->halfEdgeB->loop == outLoop);
+
+    BFace *face = outLoop->face;
+    BLoop *loop = new BLoop();
+
+}
+
 void Brep::dump()
 {
     std::ofstream dumpFile("brep_dump.txt");
