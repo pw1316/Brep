@@ -141,14 +141,116 @@ void Brep::mef(BLoop *outLoop, BVertex *vertex1, BVertex *vertex2)
     he2->prev = nhe1;
 }
 
+void Brep::mef(BLoop * outLoop, BVertex * vertex1, BVertex * vertex2, BVertex * vertex3, BVertex * vertex4)
+{
+    BHalfEdge *he1 = outLoop->findHalfEdgeWithVertex(vertex1, vertex2);
+    BHalfEdge *he2 = outLoop->findHalfEdgeWithVertex(vertex3, vertex4);
+    assert(he1 != nullptr);
+    assert(he2 != nullptr);
+
+    BFace *face = new BFace();
+    BLoop *loop = new BLoop();
+    BEdge *edge = new BEdge();
+    BHalfEdge *nhe1 = new BHalfEdge();
+    BHalfEdge *nhe2 = new BHalfEdge();
+
+    outLoop->face->solid->faces.push_back(face);
+    face->solid = outLoop->face->solid;
+
+    face->loops.push_back(loop);
+    face->outLoop = loop;
+    loop->face = face;
+
+    outLoop->firstHalfEdge = nhe1;
+    loop->firstHalfEdge = nhe2;
+    /* Move half edges with inner normal to new loop */
+    for (BHalfEdge *he = he1; he != he2; he = he->next)
+    {
+        he->loop = loop;
+    }
+
+    nhe1->prev = he1->prev;
+    nhe1->next = he2;
+    nhe2->prev = he2->prev;
+    nhe2->next = he1;
+    nhe1->edge = edge;
+    nhe2->edge = edge;
+    nhe1->vertex = vertex1;
+    nhe2->vertex = vertex3;
+    nhe1->loop = outLoop;
+    nhe2->loop = loop;
+
+    edge->halfEdgeA = nhe1;
+    edge->halfEdgeB = nhe2;
+    outLoop->face->solid->edges.push_back(edge);
+
+    he1->prev->next = nhe1;
+    he1->prev = nhe2;
+    he2->prev->next = nhe2;
+    he2->prev = nhe1;
+}
+
 void Brep::kemr(BLoop *outLoop, BEdge *edge, BVertex *vertexOnOutLoop)
 {
     assert(edge->halfEdgeA->loop == outLoop);
     assert(edge->halfEdgeB->loop == outLoop);
 
     BFace *face = outLoop->face;
+    assert(face->outLoop == outLoop);
     BLoop *loop = new BLoop();
+    face->loops.push_back(loop);
+    loop->face = face;
 
+    BHalfEdge *he1;
+    BHalfEdge *he2;
+    assert(edge->halfEdgeA->vertex == vertexOnOutLoop || edge->halfEdgeB->vertex);
+    if (edge->halfEdgeA->vertex == vertexOnOutLoop)
+    {
+        he1 = edge->halfEdgeA;
+        he2 = edge->halfEdgeB;
+    }
+    else
+    {
+        he1 = edge->halfEdgeB;
+        he2 = edge->halfEdgeA;
+    }
+
+    BHalfEdge *he = he1;
+    int count = 0;
+    while (he->next != he2)
+    {
+        ++count;
+        he = he->next;
+        he->loop = loop;
+    }
+    // No such Loop
+    if (count == 0)
+    {
+        face->loops.pop_back();
+        delete loop;
+    }
+    else
+    {
+        outLoop->firstHalfEdge = he1->prev;
+        loop->firstHalfEdge = he1->next;
+        he2->prev->next = he1->next;
+        he1->next->prev = he2->prev;
+    }
+
+    he1->prev->next = he2->next;
+    he2->next->prev = he1->prev;
+
+    delete he1;
+    delete he2;
+    for (std::list<BEdge *>::iterator edgeIt = face->solid->edges.begin(); edgeIt != face->solid->edges.end(); ++edgeIt)
+    {
+        if (*edgeIt == edge)
+        {
+            edgeIt = face->solid->edges.erase(edgeIt);
+            break;
+        }
+    }
+    delete edge;
 }
 
 void Brep::dump()

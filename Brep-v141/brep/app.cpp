@@ -232,7 +232,7 @@ GLvoid resize(GLsizei width, GLsizei height)
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluPerspective(45.0, aspect, 3.0, 7.0);
+    gluPerspective(45.0, aspect, 2.0, 20.0);
     glMatrixMode(GL_MODELVIEW);
 }
 
@@ -276,15 +276,25 @@ GLvoid initializeGL(GLsizei width, GLsizei height)
 
     glMatrixMode(GL_PROJECTION);
     aspect = (GLfloat)width / height;
-    gluPerspective(45.0, aspect, 3.0, 7.0);
+    gluPerspective(45.0, aspect, 2.0, 20.0);
     glMatrixMode(GL_MODELVIEW);
+    gluLookAt(4, 4, 5, 0, 0, 0, 0, 1, 0);
 
     brep = new Brep();
-    brep->mvfs(0, 0, -5);
-    brep->mev(brep->solids.front()->faces.front()->outLoop, brep->solids.front()->vertices.back(), 1, 0, -5);
-    brep->mev(brep->solids.front()->faces.front()->outLoop, brep->solids.front()->vertices.back(), 1, -1, -5);
-    brep->mev(brep->solids.front()->faces.front()->outLoop, brep->solids.front()->vertices.back(), 0, -1, -5);
-    brep->mef(brep->solids.front()->faces.front()->outLoop, brep->solids.front()->vertices.back(), brep->solids.front()->vertices.front());
+    brep->mvfs(1, -1, 1);
+    BSolid *solid = brep->solids.front();
+    brep->mev(solid->GetFace(0)->outLoop, solid->GetVertex(0), 1, 1, 1);
+    brep->mev(solid->GetFace(0)->outLoop, solid->GetVertex(1), -1, 1, 1);
+    brep->mev(solid->GetFace(0)->outLoop, solid->GetVertex(2), -1, -1, 1);
+    brep->mef(solid->GetFace(0)->outLoop, solid->GetVertex(3), solid->GetVertex(0));
+    brep->mev(solid->GetFace(1)->outLoop, solid->GetVertex(0), 1, -1, -1);
+    brep->mev(solid->GetFace(1)->outLoop, solid->GetVertex(4), 1, 1, -1);
+    brep->mef(solid->GetFace(1)->outLoop, solid->GetVertex(5), solid->GetVertex(1));
+    brep->mev(solid->GetFace(2)->outLoop, solid->GetVertex(5), -1, 1, -1);
+    brep->mef(solid->GetFace(2)->outLoop, solid->GetVertex(6), solid->GetVertex(2));
+    brep->mev(solid->GetFace(3)->outLoop, solid->GetVertex(6), -1, -1, -1);
+    brep->mef(solid->GetFace(3)->outLoop, solid->GetVertex(7), solid->GetVertex(3));
+    brep->mef(solid->GetFace(4)->outLoop, solid->GetVertex(7), solid->GetVertex(4));
     brep->dump();
 }
 
@@ -318,19 +328,26 @@ GLvoid drawScene(GLvoid)
         for (std::list<BSolid *>::iterator solidIt = brep->solids.begin(); solidIt != brep->solids.end(); ++solidIt)
         {
             BSolid *solid = *solidIt;
+            glPushMatrix();
             for (std::list<BFace *>::iterator faceIt = solid->faces.begin(); faceIt != solid->faces.end(); ++faceIt)
             {
                 BFace *face = *faceIt;
-                glBegin(GL_LINE_LOOP);
-                BHalfEdge *he = face->outLoop->firstHalfEdge;
-                do
+                for (std::list<BLoop *>::iterator loopIt = face->loops.begin(); loopIt != face->loops.end(); ++loopIt)
                 {
+                    BLoop *loop = *loopIt;
+                    glBegin(GL_LINE_LOOP);
+                    BHalfEdge *he = loop->firstHalfEdge;
+                    do
+                    {
+                        glVertex3f(he->vertex->x, he->vertex->y, he->vertex->z);
+                        he = he->next;
+                    } while (he != loop->firstHalfEdge);
                     glVertex3f(he->vertex->x, he->vertex->y, he->vertex->z);
-                    he = he->next;
-                } while (he != face->outLoop->firstHalfEdge);
-                glVertex3f(he->vertex->x, he->vertex->y, he->vertex->z);
-                glEnd();
+                    glEnd();
+                }
+                //glTranslatef(0.1, 0.1, 0);
             }
+            glPopMatrix();
         }
     }
     else

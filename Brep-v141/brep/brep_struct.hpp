@@ -43,6 +43,7 @@ struct BLoop
 {
     BLoop() {}
     BHalfEdge *findHalfEdgeWithVertex(BVertex *startVertex);
+    BHalfEdge *findHalfEdgeWithVertex(BVertex *startVertex, BVertex *endVertex);
 
     BHalfEdge *firstHalfEdge = nullptr;
     BFace *face = nullptr;
@@ -52,6 +53,8 @@ struct BFace
 {
     BFace() {}
 
+    BLoop *GetLoop(int index);
+
     std::list<BLoop *> loops;
     BLoop *outLoop = nullptr;
     BSolid *solid = nullptr;
@@ -60,6 +63,10 @@ struct BFace
 struct BSolid
 {
     BSolid() {}
+
+    BFace *GetFace(int index);
+    BEdge *GetEdge(int index);
+    BVertex *GetVertex(int index);
 
     std::list<BFace *> faces;
     std::list<BEdge *> edges;
