@@ -253,6 +253,59 @@ void Brep::kemr(BLoop *outLoop, BEdge *edge, BVertex *vertexOnOutLoop)
     delete edge;
 }
 
+void Brep::kfmhr(BFace *outFace, BFace *innerFace)
+{
+    BSolid *solid1 = outFace->solid;
+    BSolid *solid2 = innerFace->solid;
+    assert(innerFace->loops.size() == 1);
+
+    // Make Handle
+    if (solid1 == solid2)
+    {
+        outFace->loops.push_back(innerFace->outLoop);
+        for (std::list<BFace *>::iterator faceIt = solid1->faces.begin(); faceIt != solid1->faces.end(); ++faceIt)
+        {
+            if (*faceIt == innerFace)
+            {
+                faceIt = solid1->faces.erase(faceIt);
+                break;
+            }
+        }
+        delete innerFace;
+    }
+    // Combine Solid
+    else
+    {
+        outFace->loops.push_back(innerFace->outLoop);
+        for (std::list<BFace *>::iterator faceIt = solid2->faces.begin(); faceIt != solid2->faces.end(); ++faceIt)
+        {
+            if (*faceIt != innerFace)
+            {
+                (*faceIt)->solid = solid1;
+                solid1->faces.push_back(*faceIt);
+            }
+        }
+        for (std::list<BEdge *>::iterator edgeIt = solid2->edges.begin(); edgeIt != solid2->edges.end(); ++edgeIt)
+        {
+            solid1->edges.push_back(*edgeIt);
+        }
+        for (std::list<BVertex *>::iterator vertexIt = solid2->vertices.begin(); vertexIt != solid2->vertices.end(); ++vertexIt)
+        {
+            solid1->vertices.push_back(*vertexIt);
+        }
+        for (std::list<BSolid *>::iterator solidIt = solids.begin(); solidIt != solids.end(); ++solidIt)
+        {
+            if (*solidIt == solid2)
+            {
+                solidIt = solids.erase(solidIt);
+                break;
+            }
+        }
+        delete innerFace;
+        delete solid2;
+    }
+}
+
 void Brep::dump()
 {
     std::ofstream dumpFile("brep_dump.txt");

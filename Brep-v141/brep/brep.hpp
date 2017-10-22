@@ -11,6 +11,7 @@ public:
     void mef(BLoop *outLoop, BVertex *vertex1, BVertex *vertex2);
     void mef(BLoop *outLoop, BVertex *vertex1, BVertex *vertex2, BVertex *vertex3, BVertex *vertex4);
     void kemr(BLoop *outLoop, BEdge *edge, BVertex *vertexOnOutLoop);
+    void kfmhr(BFace *outFace, BFace *innerFace);
 
     void dump();
     std::list<BSolid *> solids;

@@ -281,20 +281,39 @@ GLvoid initializeGL(GLsizei width, GLsizei height)
     gluLookAt(4, 4, 5, 0, 0, 0, 0, 1, 0);
 
     brep = new Brep();
+    // Cube1
     brep->mvfs(1, -1, 1);
-    BSolid *solid = brep->solids.front();
-    brep->mev(solid->GetFace(0)->outLoop, solid->GetVertex(0), 1, 1, 1);
-    brep->mev(solid->GetFace(0)->outLoop, solid->GetVertex(1), -1, 1, 1);
-    brep->mev(solid->GetFace(0)->outLoop, solid->GetVertex(2), -1, -1, 1);
-    brep->mef(solid->GetFace(0)->outLoop, solid->GetVertex(3), solid->GetVertex(0));
-    brep->mev(solid->GetFace(1)->outLoop, solid->GetVertex(0), 1, -1, -1);
-    brep->mev(solid->GetFace(1)->outLoop, solid->GetVertex(4), 1, 1, -1);
-    brep->mef(solid->GetFace(1)->outLoop, solid->GetVertex(5), solid->GetVertex(1));
-    brep->mev(solid->GetFace(2)->outLoop, solid->GetVertex(5), -1, 1, -1);
-    brep->mef(solid->GetFace(2)->outLoop, solid->GetVertex(6), solid->GetVertex(2));
-    brep->mev(solid->GetFace(3)->outLoop, solid->GetVertex(6), -1, -1, -1);
-    brep->mef(solid->GetFace(3)->outLoop, solid->GetVertex(7), solid->GetVertex(3));
-    brep->mef(solid->GetFace(4)->outLoop, solid->GetVertex(7), solid->GetVertex(4));
+    BSolid *solid1 = brep->solids.front();
+    brep->mev(solid1->GetFace(0)->outLoop, solid1->GetVertex(0), 1, 1, 1);
+    brep->mev(solid1->GetFace(0)->outLoop, solid1->GetVertex(1), -1, 1, 1);
+    brep->mev(solid1->GetFace(0)->outLoop, solid1->GetVertex(2), -1, -1, 1);
+    brep->mef(solid1->GetFace(0)->outLoop, solid1->GetVertex(3), solid1->GetVertex(0));
+    brep->mev(solid1->GetFace(1)->outLoop, solid1->GetVertex(0), 1, -1, -1);
+    brep->mev(solid1->GetFace(1)->outLoop, solid1->GetVertex(4), 1, 1, -1);
+    brep->mef(solid1->GetFace(1)->outLoop, solid1->GetVertex(5), solid1->GetVertex(1));
+    brep->mev(solid1->GetFace(2)->outLoop, solid1->GetVertex(5), -1, 1, -1);
+    brep->mef(solid1->GetFace(2)->outLoop, solid1->GetVertex(6), solid1->GetVertex(2));
+    brep->mev(solid1->GetFace(3)->outLoop, solid1->GetVertex(6), -1, -1, -1);
+    brep->mef(solid1->GetFace(3)->outLoop, solid1->GetVertex(7), solid1->GetVertex(3));
+    brep->mef(solid1->GetFace(4)->outLoop, solid1->GetVertex(7), solid1->GetVertex(4));
+
+    // Cube2
+    brep->mvfs(0.5, 1, 0.5);
+    BSolid *solid2 = brep->solids.back();
+    brep->mev(solid2->GetFace(0)->outLoop, solid2->GetVertex(0), 0.5, 2, 0.5);
+    brep->mev(solid2->GetFace(0)->outLoop, solid2->GetVertex(1), -0.5, 2, 0.5);
+    brep->mev(solid2->GetFace(0)->outLoop, solid2->GetVertex(2), -0.5, 1, 0.5);
+    brep->mef(solid2->GetFace(0)->outLoop, solid2->GetVertex(3), solid2->GetVertex(0));
+    brep->mev(solid2->GetFace(1)->outLoop, solid2->GetVertex(0), 0.5, 1, -0.5);
+    brep->mev(solid2->GetFace(1)->outLoop, solid2->GetVertex(4), 0.5, 2, -0.5);
+    brep->mef(solid2->GetFace(1)->outLoop, solid2->GetVertex(5), solid2->GetVertex(1));
+    brep->mev(solid2->GetFace(2)->outLoop, solid2->GetVertex(5), -0.5, 2, -0.5);
+    brep->mef(solid2->GetFace(2)->outLoop, solid2->GetVertex(6), solid2->GetVertex(2));
+    brep->mev(solid2->GetFace(3)->outLoop, solid2->GetVertex(6), -0.5, 1, -0.5);
+    brep->mef(solid2->GetFace(3)->outLoop, solid2->GetVertex(7), solid2->GetVertex(3));
+    brep->mef(solid2->GetFace(4)->outLoop, solid2->GetVertex(7), solid2->GetVertex(4));
+
+    brep->kfmhr(solid1->GetFace(2), solid2->GetFace(5));
     brep->dump();
 }
 

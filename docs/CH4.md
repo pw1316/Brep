@@ -48,7 +48,7 @@ FAG(Face Adjacency [Hyper]graph)不带Hyper的用于特征识别
                 he1->edge = he2->edge = e;
                 e->he1 = he1;
                 e->he2 = he2;
-            
+
                 if(lp->ledge == nullptr)
                 {
                     he1->nxt = he2;
