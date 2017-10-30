@@ -12,7 +12,7 @@ BHalfEdge *BLoop::findHalfEdgeWithVertex(BVertex *startVertex)
     return nullptr;
 }
 
-BHalfEdge * BLoop::findHalfEdgeWithVertex(BVertex * startVertex, BVertex * endVertex)
+BHalfEdge *BLoop::findHalfEdgeWithVertex(BVertex * startVertex, BVertex * endVertex)
 {
     BHalfEdge *he = this->firstHalfEdge;
     do
@@ -77,5 +77,23 @@ BVertex *BSolid::GetVertex(int index)
             return *it;
         }
     }
+    return nullptr;
+}
+
+BHalfEdge *BHalfEdge::bro()
+{
+    if (this->edge)
+    {
+        /* I'm A, return B; I'm B, return A */
+        if (this->edge->halfEdgeA == this)
+        {
+            return this->edge->halfEdgeB;
+        }
+        else
+        {
+            return this->edge->halfEdgeA;
+        }
+    }
+    /* First MSFV has virtual HE */
     return nullptr;
 }

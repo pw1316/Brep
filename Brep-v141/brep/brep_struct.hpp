@@ -24,6 +24,8 @@ struct BHalfEdge
 {
     BHalfEdge() {}
 
+    BHalfEdge *bro();
+
     BHalfEdge *prev = nullptr;
     BHalfEdge *next = nullptr;
     BVertex *vertex = nullptr;

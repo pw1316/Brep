@@ -308,7 +308,21 @@ void Brep::kfmhr(BFace *outFace, BFace *innerFace)
 
 void Brep::sweep(BSolid *solid, BFace *face, float x, float y, float z)
 {
-
+    BLoop *loop = face->outLoop;
+    BVertex *vertex = loop->firstHalfEdge->vertex;
+    mev();
+    firstUp: = firstV + d * v;
+    MEV(firstV, firstUp, newE);
+    prevUp: = firstUp; nxtV = L.vertex;
+    while (nxtV != firstV) do
+    begin
+        up : = nxtV + d * v;
+        MEV(nxtV, up, newE);
+        MEF(prevUp, up, F, newF, newE);
+        prevUp: = up;
+        nxtV: = L.nxtVertex
+    end;
+    MEF(prevUp, firstUp, F, newF, newE);
 }
 
 void Brep::dump()
