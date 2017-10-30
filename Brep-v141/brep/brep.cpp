@@ -306,6 +306,11 @@ void Brep::kfmhr(BFace *outFace, BFace *innerFace)
     }
 }
 
+void Brep::sweep(BSolid *solid, BFace *face, float x, float y, float z)
+{
+
+}
+
 void Brep::dump()
 {
     std::ofstream dumpFile("brep_dump.txt");

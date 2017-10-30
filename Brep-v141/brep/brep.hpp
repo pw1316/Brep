@@ -13,6 +13,8 @@ public:
     void kemr(BLoop *outLoop, BEdge *edge, BVertex *vertexOnOutLoop);
     void kfmhr(BFace *outFace, BFace *innerFace);
 
+    void sweep(BSolid *solid, BFace *face, float x, float y, float z);
+
     void dump();
     std::list<BSolid *> solids;
 };
