@@ -308,21 +308,53 @@ void Brep::kfmhr(BFace *outFace, BFace *innerFace)
 
 void Brep::sweep(BSolid *solid, BFace *face, float x, float y, float z)
 {
-    BLoop *loop = face->outLoop;
-    BVertex *vertex = loop->firstHalfEdge->vertex;
-    mev();
-    firstUp: = firstV + d * v;
-    MEV(firstV, firstUp, newE);
-    prevUp: = firstUp; nxtV = L.vertex;
-    while (nxtV != firstV) do
-    begin
-        up : = nxtV + d * v;
-        MEV(nxtV, up, newE);
-        MEF(prevUp, up, F, newF, newE);
-        prevUp: = up;
-        nxtV: = L.nxtVertex
-    end;
-    MEF(prevUp, firstUp, F, newF, newE);
+    // 外环对立环
+    BLoop *loop = face->outLoop->firstHalfEdge->bro()->loop;
+
+    // 用外环初始边的对立边作为对立环的初始边
+    BVertex *vertex = face->outLoop->firstHalfEdge->bro()->vertex;
+    mev(loop, vertex, vertex->x + x, vertex->y + y, vertex->z + z);
+    BVertex *fnvertex = solid->vertices.back();
+    BVertex *nvertex = fnvertex;
+
+    // 外环逆循环（对立环会被修改丢失原信息）
+    BHalfEdge *he = face->outLoop->firstHalfEdge->prev;
+    while (he != face->outLoop->firstHalfEdge)
+    {
+        // 循环边的对立边是需要的边
+        mev(loop, he->bro()->vertex, he->bro()->vertex->x + x, he->bro()->vertex->y + y, he->bro()->vertex->z + z);
+        mef(loop, nvertex, solid->vertices.back());
+        nvertex = solid->vertices.back();
+        he = he->prev;
+    }
+    // 上述循环保证loop最后是底面
+    mef(loop, nvertex, fnvertex);
+
+    // 遍历内环
+    for (BLoop *outRing : face->loops)
+    {
+        if (outRing != face->outLoop)
+        {
+            /* 每一内环的对立环都是一个面 */
+            BLoop *ring = outRing->firstHalfEdge->bro()->loop;
+            BVertex *v = outRing->firstHalfEdge->bro()->vertex;
+            mev(ring, v, v->x + x, v->y + y, v->z + z);
+            BVertex *fnv = solid->vertices.back();
+            BVertex *nv = fnv;
+            BHalfEdge *he = outRing->firstHalfEdge->prev;
+            while (he != outRing->firstHalfEdge)
+            {
+                mev(ring, he->bro()->vertex, he->bro()->vertex->x + x, he->bro()->vertex->y + y, he->bro()->vertex->z + z);
+                mef(ring, nv, solid->vertices.back());
+                nv = solid->vertices.back();
+                he = he->prev;
+            }
+            // 上述循环保证ring最后也是底面
+            mef(ring, nv, fnv);
+            // 删除底面内环的贴合面
+            kfmhr(loop->face, ring->face);
+        }
+    }
 }
 
 void Brep::dump()
