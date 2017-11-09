@@ -28,6 +28,8 @@ HGLRC ghRC;
 #define LINEMODE 1
 INT renderMode = FACEMODE;
 
+GLfloat yRot = 0;
+
 LONG WINAPI MainWndProc(HWND, UINT, WPARAM, LPARAM);
 BOOL bSetupPixelFormat(HDC);
 
@@ -165,9 +167,11 @@ LONG WINAPI MainWndProc(
     case WM_KEYDOWN:
         switch (wParam) {
         case VK_LEFT:
+            yRot -= 5;
             longinc += 0.5F;
             break;
         case VK_RIGHT:
+            yRot += 5;
             longinc -= 0.5F;
             break;
         case VK_UP:
@@ -285,16 +289,17 @@ GLvoid initializeGL(GLsizei width, GLsizei height)
     gluLookAt(4, 4, 5, 0, 0, 0, 0, 1, 0);
 
     GLfloat lightPos[] = { 5, 4, 0, 1 };
-    GLfloat lightPos2[] = { 0, 4, 1, 1 };
+    GLfloat lightPos2[] = { 0, 4, 5, 1 };
     GLfloat lightAmb[] = { 0.2, 0, 0, 0.5 };
     GLfloat lightDiff[] = { 0.45, 0, 0, 1 };
+    GLfloat lightSpec[] = { 0.45, 0, 0, 1 };
     glLightfv(GL_LIGHT0, GL_POSITION, lightPos);
     glLightfv(GL_LIGHT0, GL_AMBIENT, lightAmb);
     glLightfv(GL_LIGHT0, GL_DIFFUSE, lightDiff);
 
     glLightfv(GL_LIGHT1, GL_POSITION, lightPos2);
     glLightfv(GL_LIGHT1, GL_AMBIENT, lightAmb);
-    glLightfv(GL_LIGHT1, GL_DIFFUSE, lightDiff);
+    glLightfv(GL_LIGHT1, GL_SPECULAR, lightSpec);
 
     brep = new Brep();
     //// Cube1
@@ -357,7 +362,7 @@ GLvoid drawScene(GLvoid)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glPushMatrix();
-
+    glRotatef(yRot, 0, 1, 0);
     if (renderMode == FACEMODE)
     {
         for (std::list<BSolid *>::iterator solidIt = brep->solids.begin(); solidIt != brep->solids.end(); ++solidIt)
