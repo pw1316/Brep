@@ -6,6 +6,7 @@
 #include <Windows.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
+#include <vector>
 
 #include "brep.hpp"
 
@@ -25,7 +26,7 @@ HGLRC ghRC;
 
 #define FACEMODE 0
 #define LINEMODE 1
-INT renderMode = LINEMODE;
+INT renderMode = FACEMODE;
 
 LONG WINAPI MainWndProc(HWND, UINT, WPARAM, LPARAM);
 BOOL bSetupPixelFormat(HDC);
@@ -273,12 +274,27 @@ GLvoid initializeGL(GLsizei width, GLsizei height)
     glClearDepth(1.0);
 
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_LIGHTING);
+    glEnable(GL_LIGHT0);
+    glEnable(GL_LIGHT1);
 
     glMatrixMode(GL_PROJECTION);
     aspect = (GLfloat)width / height;
     gluPerspective(45.0, aspect, 2.0, 20.0);
     glMatrixMode(GL_MODELVIEW);
     gluLookAt(4, 4, 5, 0, 0, 0, 0, 1, 0);
+
+    GLfloat lightPos[] = { 5, 4, 0, 1 };
+    GLfloat lightPos2[] = { 0, 4, 1, 1 };
+    GLfloat lightAmb[] = { 0.2, 0, 0, 0.5 };
+    GLfloat lightDiff[] = { 0.45, 0, 0, 1 };
+    glLightfv(GL_LIGHT0, GL_POSITION, lightPos);
+    glLightfv(GL_LIGHT0, GL_AMBIENT, lightAmb);
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, lightDiff);
+
+    glLightfv(GL_LIGHT1, GL_POSITION, lightPos2);
+    glLightfv(GL_LIGHT1, GL_AMBIENT, lightAmb);
+    glLightfv(GL_LIGHT1, GL_DIFFUSE, lightDiff);
 
     brep = new Brep();
     //// Cube1
@@ -347,17 +363,50 @@ GLvoid drawScene(GLvoid)
         for (std::list<BSolid *>::iterator solidIt = brep->solids.begin(); solidIt != brep->solids.end(); ++solidIt)
         {
             BSolid *solid = *solidIt;
-            for (std::list<BFace *>::iterator faceIt = solid->faces.begin(); faceIt != solid->faces.end(); ++faceIt)
+            GLuint id = glGenLists(solid->faces.size());
+            if (id)
             {
-                BFace *face = *faceIt;
-                glBegin(GL_TRIANGLE_FAN);
-                BHalfEdge *he = face->outLoop->firstHalfEdge;
-                do
+                GLuint faceId = id;
+                for (std::list<BFace *>::iterator faceIt = solid->faces.begin(); faceIt != solid->faces.end(); ++faceIt)
                 {
-                    glVertex3f(he->vertex->x, he->vertex->y, he->vertex->z);
-                    he = he->next;
-                } while (he != face->outLoop->firstHalfEdge);
-                glEnd();
+                    BFace *face = *faceIt;
+                    GLUtesselator *faceTess = gluNewTess();
+                    if (faceTess != nullptr)
+                    {
+                        gluTessCallback(faceTess, GLU_TESS_BEGIN, (void(__stdcall*)(void))glBegin);
+                        gluTessCallback(faceTess, GLU_TESS_END, (void(__stdcall*)(void))glEnd);
+                        gluTessCallback(faceTess, GLU_TESS_VERTEX, (void(__stdcall*)())glVertex3dv);
+                        glNewList(faceId, GL_COMPILE);
+                        std::vector<GLdouble*> data;
+                        gluTessBeginPolygon(faceTess, nullptr);
+                        for (BLoop* loop : face->loops)
+                        {
+                            gluTessBeginContour(faceTess);
+                            BHalfEdge *he = loop->firstHalfEdge;
+                            do
+                            {
+                                GLdouble *d = new GLdouble[3];
+                                d[0] = he->vertex->x;
+                                d[1] = he->vertex->y;
+                                d[2] = he->vertex->z;
+                                gluTessVertex(faceTess, d, d);
+                                data.push_back(d);
+                                he = he->next;
+                            } while (he != loop->firstHalfEdge);
+                            gluTessEndContour(faceTess);
+                        }
+                        gluTessEndPolygon(faceTess);
+                        for (GLdouble* d : data)
+                        {
+                            delete[] d;
+                        }
+                        glEndList();
+                        gluDeleteTess(faceTess);
+                    }
+                    glCallList(faceId);
+                    faceId++;
+                }
+                glDeleteLists(id, solid->faces.size());
             }
         }
     }
