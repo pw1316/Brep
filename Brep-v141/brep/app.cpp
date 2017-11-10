@@ -1,8 +1,3 @@
-/*
-* Example of a Windows OpenGL program.
-* The OpenGL code is the same as that used in
-* the X Window System sample
-*/
 #include <Windows.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
@@ -28,18 +23,19 @@ HGLRC ghRC;
 #define LINEMODE 1
 INT renderMode = FACEMODE;
 
-GLfloat yRot = 0;
+GLfloat eyeX = -5;
+GLfloat eyeY = 1.5;
+GLfloat eyeZ = 0.5;
+GLfloat yaw = 0;
+GLfloat pitch = 0;
+bool RDown = false;
+INT mouseX;
+INT mouseY;
+
+void normalizeVec3(GLfloat &x, GLfloat &y, GLfloat &z);
 
 LONG WINAPI MainWndProc(HWND, UINT, WPARAM, LPARAM);
 BOOL bSetupPixelFormat(HDC);
-
-/* OpenGL globals, defines, and prototypes */
-GLfloat latitude, longitude, latinc, longinc;
-GLdouble radius;
-
-#define GLOBE    1 
-#define CYLINDER 2 
-#define CONE     3 
 
 GLvoid resize(GLsizei, GLsizei);
 GLvoid initializeGL(GLsizei, GLsizei);
@@ -110,6 +106,23 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     }
 }
 
+void normalizeVec3(GLfloat &x, GLfloat &y, GLfloat &z)
+{
+    GLfloat len = sqrtf(x * x + y * y + z * z);
+    if (abs(len) <= 0.000001)
+    {
+        x = 0;
+        y = 0;
+        z = 0;
+    }
+    else
+    {
+        x /= len;
+        y /= len;
+        z /= len;
+    }
+}
+
 /* main window procedure */
 LONG WINAPI MainWndProc(
     HWND    hWnd,
@@ -164,23 +177,66 @@ LONG WINAPI MainWndProc(
         PostQuitMessage(0);
         break;
 
+    case WM_RBUTTONDOWN:
+        RDown = true;
+        mouseX = lParam & 0xFFFF;
+        mouseY = lParam >> 16;
+        break;
+
+    case WM_RBUTTONUP:
+        RDown = false;
+        break;
+
+    case WM_MOUSEMOVE:
+        if (RDown)
+        {
+            INT x = (int)(short)LOWORD(lParam);
+            INT y = (int)(short)HIWORD(lParam);
+            yaw += 3.1415926 * (x - mouseX) / 360;
+            pitch -= 3.1415926 * (y - mouseY) / 360;
+            mouseX = x;
+            mouseY = y;
+        }
+        break;
+
     case WM_KEYDOWN:
         switch (wParam) {
         case VK_LEFT:
-            yRot -= 5;
-            longinc += 0.5F;
             break;
         case VK_RIGHT:
-            yRot += 5;
-            longinc -= 0.5F;
             break;
         case VK_UP:
-            latinc += 0.5F;
             break;
         case VK_DOWN:
-            latinc -= 0.5F;
             break;
+        case 'W':
+            eyeX += 0.2 * cosf(pitch) * cosf(yaw);
+            eyeY += 0.2 * sinf(pitch);
+            eyeZ += 0.2 * cosf(pitch) * sinf(yaw);
+            break;
+        case 'S':
+            eyeX -= 0.2 * cosf(pitch) * cosf(yaw);
+            eyeY -= 0.2 * sinf(pitch);
+            eyeZ -= 0.2 * cosf(pitch) * sinf(yaw);
+            break;
+        case 'A':
+        {
+            GLfloat tmpX = -cosf(pitch) * sinf(yaw), tmpY = 0, tmpZ = cosf(pitch) * cosf(yaw);
+            normalizeVec3(tmpX, tmpY, tmpZ);
+            eyeX -= 0.2 * tmpX;
+            eyeZ -= 0.2 * tmpZ;
         }
+        break;
+        case 'D':
+        {
+            GLfloat tmpX = -cosf(pitch) * sinf(yaw), tmpY = 0, tmpZ = cosf(pitch) * cosf(yaw);
+            normalizeVec3(tmpX, tmpY, tmpZ);
+            eyeX += 0.2 * tmpX;
+            eyeZ += 0.2 * tmpZ;
+        }
+        break;
+        }
+        break;
 
     default:
         lRet = DefWindowProc(hWnd, uMsg, wParam, lParam);
@@ -241,35 +297,6 @@ GLvoid resize(GLsizei width, GLsizei height)
     glMatrixMode(GL_MODELVIEW);
 }
 
-GLvoid createObjects()
-{
-    GLUquadricObj *quadObj;
-
-    glNewList(GLOBE, GL_COMPILE);
-    quadObj = gluNewQuadric();
-    gluQuadricDrawStyle(quadObj, GLU_LINE);
-    gluSphere(quadObj, 1.5, 16, 16);
-    glEndList();
-
-    glNewList(CONE, GL_COMPILE);
-    quadObj = gluNewQuadric();
-    gluQuadricDrawStyle(quadObj, GLU_FILL);
-    gluQuadricNormals(quadObj, GLU_SMOOTH);
-    gluCylinder(quadObj, 0.3, 0.0, 0.6, 15, 10);
-    glEndList();
-
-    glNewList(CYLINDER, GL_COMPILE);
-    glPushMatrix();
-    glRotatef((GLfloat)90.0, (GLfloat)1.0, (GLfloat)0.0, (GLfloat)0.0);
-    glTranslatef((GLfloat)0.0, (GLfloat)0.0, (GLfloat)-1.0);
-    quadObj = gluNewQuadric();
-    gluQuadricDrawStyle(quadObj, GLU_FILL);
-    gluQuadricNormals(quadObj, GLU_SMOOTH);
-    gluCylinder(quadObj, 0.3, 0.3, 0.6, 12, 2);
-    glPopMatrix();
-    glEndList();
-}
-
 GLvoid initializeGL(GLsizei width, GLsizei height)
 {
     GLfloat aspect;
@@ -278,6 +305,7 @@ GLvoid initializeGL(GLsizei width, GLsizei height)
     glClearDepth(1.0);
 
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
     glEnable(GL_LIGHTING);
     glEnable(GL_LIGHT0);
     glEnable(GL_LIGHT1);
@@ -286,7 +314,6 @@ GLvoid initializeGL(GLsizei width, GLsizei height)
     aspect = (GLfloat)width / height;
     gluPerspective(45.0, aspect, 2.0, 20.0);
     glMatrixMode(GL_MODELVIEW);
-    gluLookAt(4, 4, 5, 0, 0, 0, 0, 1, 0);
 
     GLfloat lightPos[] = { 5, 4, 0, 1 };
     GLfloat lightPos2[] = { 0, 4, 5, 1 };
@@ -360,9 +387,15 @@ GLvoid initializeGL(GLsizei width, GLsizei height)
 GLvoid drawScene(GLvoid)
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    gluLookAt(eyeX, eyeY, eyeZ, \
+        eyeX + cosf(pitch) * cosf(yaw), \
+        eyeY + sinf(pitch), \
+        eyeZ + cosf(pitch) * sinf(yaw), \
+        0, 1, 0);
 
     glPushMatrix();
-    glRotatef(yRot, 0, 1, 0);
     if (renderMode == FACEMODE)
     {
         for (std::list<BSolid *>::iterator solidIt = brep->solids.begin(); solidIt != brep->solids.end(); ++solidIt)
