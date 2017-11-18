@@ -5,19 +5,15 @@
 
 #include "brep.hpp"
 
-/* Windows globals, defines, and prototypes */
-CHAR szAppName[] = "Win OpenGL";
-HWND  ghWnd;
-HDC   ghDC;
-HGLRC ghRC;
+/* Windows parameters */
+CHAR appName[] = "BRep OpenGL";
+HWND  g_hWnd;
+HDC   g_hDC;
+HGLRC g_hGLRC;
 
-#define SWAPBUFFERS SwapBuffers(ghDC) 
-#define BLACK_INDEX     0 
-#define RED_INDEX       13 
-#define GREEN_INDEX     14 
-#define BLUE_INDEX      16 
-#define WIDTH           800 
-#define HEIGHT          600
+#define SWAPBUFFERS SwapBuffers(g_hDC)
+#define APP_WIDTH 800 
+#define APP_HEIGHT 600
 
 #define FACEMODE 0
 #define LINEMODE 1
@@ -32,21 +28,21 @@ bool RDown = false;
 INT mouseX;
 INT mouseY;
 
-void normalizeVec3(GLfloat &x, GLfloat &y, GLfloat &z);
-
 LONG WINAPI MainWndProc(HWND, UINT, WPARAM, LPARAM);
 BOOL bSetupPixelFormat(HDC);
 
-GLvoid resize(GLsizei, GLsizei);
-GLvoid initializeGL(GLsizei, GLsizei);
-GLvoid drawScene(GLvoid);
+/* OpenGL Code */
+GLvoid gl_resize_cb(GLsizei, GLsizei);
+GLvoid gl_init_cb(GLsizei, GLsizei);
+GLvoid gl_draw_cb(GLvoid);
 
-Brep *brep = nullptr;
+void normalizeVec3(GLfloat &x, GLfloat &y, GLfloat &z);
+Brep *g_brep = nullptr;
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
-    MSG        msg;
-    WNDCLASS   wndclass;
+    MSG msg;
+    WNDCLASS wndclass;
 
     /* Register the frame class */
     wndclass.style = 0;
@@ -54,43 +50,38 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     wndclass.cbClsExtra = 0;
     wndclass.cbWndExtra = 0;
     wndclass.hInstance = hInstance;
-    wndclass.hIcon = LoadIcon(hInstance, szAppName);
+    wndclass.hIcon = LoadIcon(hInstance, appName);
     wndclass.hCursor = LoadCursor(NULL, IDC_ARROW);
     wndclass.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
-    wndclass.lpszMenuName = szAppName;
-    wndclass.lpszClassName = szAppName;
+    wndclass.lpszMenuName = appName;
+    wndclass.lpszClassName = appName;
 
     if (!RegisterClass(&wndclass))
         return FALSE;
 
     /* Create the frame */
-    ghWnd = CreateWindow(szAppName,
-        "Generic OpenGL Sample",
+    g_hWnd = CreateWindow(appName,
+        "BRep OpenGL",
         WS_OVERLAPPEDWINDOW | WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
         CW_USEDEFAULT,
         CW_USEDEFAULT,
-        WIDTH,
-        HEIGHT,
+        APP_WIDTH,
+        APP_HEIGHT,
         NULL,
         NULL,
         hInstance,
         NULL);
 
     /* make sure window was created */
-    if (!ghWnd)
+    if (!g_hWnd)
         return FALSE;
 
     /* show and update main window */
-    ShowWindow(ghWnd, nCmdShow);
+    ShowWindow(g_hWnd, nCmdShow);
+    UpdateWindow(g_hWnd);
 
-    UpdateWindow(ghWnd);
-
-    /* animation loop */
     while (1) {
-        /*
-        *  Process all pending messages
-        */
-
+        /* Message */
         while (PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE) == TRUE)
         {
             if (GetMessage(&msg, NULL, 0, 0))
@@ -102,49 +93,28 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
                 return TRUE;
             }
         }
-        drawScene();
+        /* Render */
+        gl_draw_cb();
     }
 }
 
-void normalizeVec3(GLfloat &x, GLfloat &y, GLfloat &z)
+/* Main window proc */
+LONG WINAPI MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    GLfloat len = sqrtf(x * x + y * y + z * z);
-    if (abs(len) <= 0.000001)
-    {
-        x = 0;
-        y = 0;
-        z = 0;
-    }
-    else
-    {
-        x /= len;
-        y /= len;
-        z /= len;
-    }
-}
-
-/* main window procedure */
-LONG WINAPI MainWndProc(
-    HWND    hWnd,
-    UINT    uMsg,
-    WPARAM  wParam,
-    LPARAM  lParam)
-{
-    LONG    lRet = 1;
-    PAINTSTRUCT    ps;
+    LONG lRet = 1;
+    PAINTSTRUCT ps;
     RECT rect;
 
     switch (uMsg) {
-
     case WM_CREATE:
-        ghDC = GetDC(hWnd);
-        if (!bSetupPixelFormat(ghDC))
+        g_hDC = GetDC(hWnd);
+        if (!bSetupPixelFormat(g_hDC))
             PostQuitMessage(0);
 
-        ghRC = wglCreateContext(ghDC);
-        wglMakeCurrent(ghDC, ghRC);
+        g_hGLRC = wglCreateContext(g_hDC);
+        wglMakeCurrent(g_hDC, g_hGLRC);
         GetClientRect(hWnd, &rect);
-        initializeGL(rect.right, rect.bottom);
+        gl_init_cb(rect.right, rect.bottom);
         break;
 
     case WM_PAINT:
@@ -154,25 +124,25 @@ LONG WINAPI MainWndProc(
 
     case WM_SIZE:
         GetClientRect(hWnd, &rect);
-        resize(rect.right, rect.bottom);
+        gl_resize_cb(rect.right, rect.bottom);
         break;
 
     case WM_CLOSE:
-        if (ghRC)
-            wglDeleteContext(ghRC);
-        if (ghDC)
-            ReleaseDC(hWnd, ghDC);
-        ghRC = 0;
-        ghDC = 0;
+        if (g_hGLRC)
+            wglDeleteContext(g_hGLRC);
+        if (g_hDC)
+            ReleaseDC(hWnd, g_hDC);
+        g_hGLRC = 0;
+        g_hDC = 0;
 
         DestroyWindow(hWnd);
         break;
 
     case WM_DESTROY:
-        if (ghRC)
-            wglDeleteContext(ghRC);
-        if (ghDC)
-            ReleaseDC(hWnd, ghDC);
+        if (g_hGLRC)
+            wglDeleteContext(g_hGLRC);
+        if (g_hDC)
+            ReleaseDC(hWnd, g_hDC);
 
         PostQuitMessage(0);
         break;
@@ -192,8 +162,8 @@ LONG WINAPI MainWndProc(
         {
             INT x = (int)(short)LOWORD(lParam);
             INT y = (int)(short)HIWORD(lParam);
-            yaw += 3.1415926 * (x - mouseX) / 360;
-            pitch -= 3.1415926 * (y - mouseY) / 360;
+            yaw += 3.14159265359f * (x - mouseX) / 360;
+            pitch -= 3.14159265359f * (y - mouseY) / 360;
             mouseX = x;
             mouseY = y;
         }
@@ -210,29 +180,29 @@ LONG WINAPI MainWndProc(
         case VK_DOWN:
             break;
         case 'W':
-            eyeX += 0.2 * cosf(pitch) * cosf(yaw);
-            eyeY += 0.2 * sinf(pitch);
-            eyeZ += 0.2 * cosf(pitch) * sinf(yaw);
+            eyeX += 0.2f * cosf(pitch) * cosf(yaw);
+            eyeY += 0.2f * sinf(pitch);
+            eyeZ += 0.2f * cosf(pitch) * sinf(yaw);
             break;
         case 'S':
-            eyeX -= 0.2 * cosf(pitch) * cosf(yaw);
-            eyeY -= 0.2 * sinf(pitch);
-            eyeZ -= 0.2 * cosf(pitch) * sinf(yaw);
+            eyeX -= 0.2f * cosf(pitch) * cosf(yaw);
+            eyeY -= 0.2f * sinf(pitch);
+            eyeZ -= 0.2f * cosf(pitch) * sinf(yaw);
             break;
         case 'A':
         {
             GLfloat tmpX = -cosf(pitch) * sinf(yaw), tmpY = 0, tmpZ = cosf(pitch) * cosf(yaw);
             normalizeVec3(tmpX, tmpY, tmpZ);
-            eyeX -= 0.2 * tmpX;
-            eyeZ -= 0.2 * tmpZ;
+            eyeX -= 0.2f * tmpX;
+            eyeZ -= 0.2f * tmpZ;
         }
         break;
         case 'D':
         {
             GLfloat tmpX = -cosf(pitch) * sinf(yaw), tmpY = 0, tmpZ = cosf(pitch) * cosf(yaw);
             normalizeVec3(tmpX, tmpY, tmpZ);
-            eyeX += 0.2 * tmpX;
-            eyeZ += 0.2 * tmpZ;
+            eyeX += 0.2f * tmpX;
+            eyeZ += 0.2f * tmpZ;
         }
         break;
         }
@@ -282,28 +252,18 @@ BOOL bSetupPixelFormat(HDC hdc)
 }
 
 /* OpenGL code */
-
-GLvoid resize(GLsizei width, GLsizei height)
+GLvoid gl_resize_cb(GLsizei width, GLsizei height)
 {
-    GLfloat aspect;
-
     glViewport(0, 0, width, height);
-
-    aspect = (GLfloat)width / height;
-
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluPerspective(45.0, aspect, 2.0, 20.0);
+    gluPerspective(60, (GLdouble)width / height, 1, 100);
     glMatrixMode(GL_MODELVIEW);
 }
 
-GLvoid initializeGL(GLsizei width, GLsizei height)
+GLvoid gl_init_cb(GLsizei width, GLsizei height)
 {
-    GLfloat aspect;
-
-    glClearIndex((GLfloat)BLACK_INDEX);
     glClearDepth(1.0);
-
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     glEnable(GL_LIGHTING);
@@ -311,15 +271,15 @@ GLvoid initializeGL(GLsizei width, GLsizei height)
     glEnable(GL_LIGHT1);
 
     glMatrixMode(GL_PROJECTION);
-    aspect = (GLfloat)width / height;
-    gluPerspective(45.0, aspect, 2.0, 20.0);
+    glLoadIdentity();
+    gluPerspective(60, (GLdouble)width / height, 1, 100);
     glMatrixMode(GL_MODELVIEW);
 
     GLfloat lightPos[] = { 5, 4, 0, 1 };
     GLfloat lightPos2[] = { 0, 4, 5, 1 };
-    GLfloat lightAmb[] = { 0.2, 0, 0, 0.5 };
-    GLfloat lightDiff[] = { 0.45, 0, 0, 1 };
-    GLfloat lightSpec[] = { 0.45, 0, 0, 1 };
+    GLfloat lightAmb[] = { 0.2f, 0.f, 0.f, 0.5f };
+    GLfloat lightDiff[] = { 0.45f, 0.f, 0.f, 1.f };
+    GLfloat lightSpec[] = { 0.45f, 0.f, 0.f, 1.f };
     glLightfv(GL_LIGHT0, GL_POSITION, lightPos);
     glLightfv(GL_LIGHT0, GL_AMBIENT, lightAmb);
     glLightfv(GL_LIGHT0, GL_DIFFUSE, lightDiff);
@@ -328,7 +288,7 @@ GLvoid initializeGL(GLsizei width, GLsizei height)
     glLightfv(GL_LIGHT1, GL_AMBIENT, lightAmb);
     glLightfv(GL_LIGHT1, GL_SPECULAR, lightSpec);
 
-    brep = new Brep();
+    g_brep = new Brep();
     //// Cube1
     //brep->mvfs(1, -1, 1);
     //BSolid *solid1 = brep->solids.front();
@@ -364,27 +324,27 @@ GLvoid initializeGL(GLsizei width, GLsizei height)
     //brep->kfmhr(solid1->GetFace(2), solid2->GetFace(5));
 
     // sweep3
-    brep->mvfs(0.5, 1, 0.5);
-    BSolid *solid3 = brep->solids.back();
-    brep->mev(solid3->GetFace(0)->outLoop, solid3->GetVertex(0), 0.5, 2, 0.5);
-    brep->mev(solid3->GetFace(0)->outLoop, solid3->GetVertex(1), 0, 2, 0.5);
-    brep->mev(solid3->GetFace(0)->outLoop, solid3->GetVertex(2), -0.5, 2, 0.5);
-    brep->mev(solid3->GetFace(0)->outLoop, solid3->GetVertex(3), -0.5, 1, 0.5);
-    brep->mef(solid3->GetFace(0)->outLoop, solid3->GetVertex(4), solid3->GetVertex(0));
+    g_brep->mvfs(0.5, 1, 0.5);
+    BSolid *solid3 = g_brep->solids.back();
+    g_brep->mev(solid3->GetFace(0)->outLoop, solid3->GetVertex(0), 0.5, 2, 0.5);
+    g_brep->mev(solid3->GetFace(0)->outLoop, solid3->GetVertex(1), 0, 2, 0.5);
+    g_brep->mev(solid3->GetFace(0)->outLoop, solid3->GetVertex(2), -0.5, 2, 0.5);
+    g_brep->mev(solid3->GetFace(0)->outLoop, solid3->GetVertex(3), -0.5, 1, 0.5);
+    g_brep->mef(solid3->GetFace(0)->outLoop, solid3->GetVertex(4), solid3->GetVertex(0));
 
-    brep->mev(solid3->GetFace(0)->outLoop, solid3->GetVertex(2), 0, 1.75, 0.5);
-    brep->mev(solid3->GetFace(0)->outLoop, solid3->GetVertex(5), -0.25, 1.75, 0.5);
-    brep->mev(solid3->GetFace(0)->outLoop, solid3->GetVertex(6), -0.25, 1.25, 0.5);
-    brep->mev(solid3->GetFace(0)->outLoop, solid3->GetVertex(7), 0.25, 1.25, 0.5);
-    brep->mev(solid3->GetFace(0)->outLoop, solid3->GetVertex(8), 0.25, 1.75, 0.5);
-    brep->mef(solid3->GetFace(0)->outLoop, solid3->GetVertex(5), solid3->GetVertex(6), solid3->GetVertex(9), solid3->GetVertex(8));
-    brep->kemr(solid3->GetFace(0)->outLoop, solid3->GetFace(0)->outLoop->findHalfEdgeWithVertex(solid3->GetVertex(2), solid3->GetVertex(5))->edge, solid3->GetVertex(2));
-    brep->dump();
-    brep->sweep(solid3, solid3->GetFace(0), 0, 0, -2);
-    brep->dump();
+    g_brep->mev(solid3->GetFace(0)->outLoop, solid3->GetVertex(2), 0, 1.75, 0.5);
+    g_brep->mev(solid3->GetFace(0)->outLoop, solid3->GetVertex(5), -0.25, 1.75, 0.5);
+    g_brep->mev(solid3->GetFace(0)->outLoop, solid3->GetVertex(6), -0.25, 1.25, 0.5);
+    g_brep->mev(solid3->GetFace(0)->outLoop, solid3->GetVertex(7), 0.25, 1.25, 0.5);
+    g_brep->mev(solid3->GetFace(0)->outLoop, solid3->GetVertex(8), 0.25, 1.75, 0.5);
+    g_brep->mef(solid3->GetFace(0)->outLoop, solid3->GetVertex(5), solid3->GetVertex(6), solid3->GetVertex(9), solid3->GetVertex(8));
+    g_brep->kemr(solid3->GetFace(0)->outLoop, solid3->GetFace(0)->outLoop->findHalfEdgeWithVertex(solid3->GetVertex(2), solid3->GetVertex(5))->edge, solid3->GetVertex(2));
+    g_brep->dump();
+    g_brep->sweep(solid3, solid3->GetFace(0), 0, 0, -2);
+    g_brep->dump();
 }
 
-GLvoid drawScene(GLvoid)
+GLvoid gl_draw_cb(GLvoid)
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glMatrixMode(GL_MODELVIEW);
@@ -398,7 +358,7 @@ GLvoid drawScene(GLvoid)
     glPushMatrix();
     if (renderMode == FACEMODE)
     {
-        for (std::list<BSolid *>::iterator solidIt = brep->solids.begin(); solidIt != brep->solids.end(); ++solidIt)
+        for (std::list<BSolid *>::iterator solidIt = g_brep->solids.begin(); solidIt != g_brep->solids.end(); ++solidIt)
         {
             BSolid *solid = *solidIt;
             GLuint id = glGenLists(solid->faces.size());
@@ -450,7 +410,7 @@ GLvoid drawScene(GLvoid)
     }
     else if (renderMode == LINEMODE)
     {
-        for (std::list<BSolid *>::iterator solidIt = brep->solids.begin(); solidIt != brep->solids.end(); ++solidIt)
+        for (std::list<BSolid *>::iterator solidIt = g_brep->solids.begin(); solidIt != g_brep->solids.end(); ++solidIt)
         {
             BSolid *solid = *solidIt;
             glPushMatrix();
@@ -483,4 +443,21 @@ GLvoid drawScene(GLvoid)
     glPopMatrix();
 
     SWAPBUFFERS;
+}
+
+void normalizeVec3(GLfloat &x, GLfloat &y, GLfloat &z)
+{
+    GLfloat len = sqrtf(x * x + y * y + z * z);
+    if (abs(len) <= 0.000001)
+    {
+        x = 0;
+        y = 0;
+        z = 0;
+    }
+    else
+    {
+        x /= len;
+        y /= len;
+        z /= len;
+    }
 }

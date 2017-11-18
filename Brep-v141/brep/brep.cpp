@@ -411,13 +411,4 @@ void Brep::dump()
         }
     }
     dumpFile.close();
-
-    //int main()
-    //{
-    //    Brep brep;
-    //    brep.mvfs(0, 0, 0);
-    //    brep.mev(brep.solids.front()->faces.front()->outLoop, brep.solids.front()->vertices.back(), 1, 0, 0);
-    //    brep.mev(brep.solids.front()->faces.front()->outLoop, brep.solids.front()->vertices.back(), 1, -1, 0);
-    //    brep.mev(brep.solids.front()->faces.front()->outLoop, brep.solids.front()->vertices.back(), 0, -1, 0);
-    //}
 }
