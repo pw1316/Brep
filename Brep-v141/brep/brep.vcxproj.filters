@@ -18,9 +18,6 @@
     <ClInclude Include="brep_list.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="dumpGL.hpp">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="brep_struct.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -33,9 +30,6 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="brep.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="dumpGL.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="app.cpp">
