@@ -19,10 +19,10 @@ HGLRC g_hGLRC;
 #define LINEMODE 1
 INT renderMode = FACEMODE;
 
-GLfloat eyeX = -5;
-GLfloat eyeY = 1.5;
-GLfloat eyeZ = 0.5;
-GLfloat yaw = 0;
+GLfloat eyeX = 0;
+GLfloat eyeY = 0;
+GLfloat eyeZ = -5;
+GLfloat yaw = 3.14159265359f / 2;
 GLfloat pitch = 0;
 bool RDown = false;
 INT mouseX;
@@ -205,6 +205,9 @@ LONG WINAPI MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             eyeZ += 0.2f * tmpZ;
         }
         break;
+        case 'Z':
+            renderMode = !renderMode;
+            break;
         }
         break;
 
@@ -268,79 +271,85 @@ GLvoid gl_init_cb(GLsizei width, GLsizei height)
     glEnable(GL_CULL_FACE);
     glEnable(GL_LIGHTING);
     glEnable(GL_LIGHT0);
-    glEnable(GL_LIGHT1);
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     gluPerspective(60, (GLdouble)width / height, 1, 100);
     glMatrixMode(GL_MODELVIEW);
 
-    GLfloat lightPos[] = { 5, 4, 0, 1 };
-    GLfloat lightPos2[] = { 0, 4, 5, 1 };
-    GLfloat lightAmb[] = { 0.2f, 0.f, 0.f, 0.5f };
-    GLfloat lightDiff[] = { 0.45f, 0.f, 0.f, 1.f };
-    GLfloat lightSpec[] = { 0.45f, 0.f, 0.f, 1.f };
-    glLightfv(GL_LIGHT0, GL_POSITION, lightPos);
+    GLfloat lightAmb[] = { 0.3f, 0.3f, 0.3f, 0.1f };
+    GLfloat lightDiff[] = { 0.45f, 0.45f, 0.45f, 1.f };
     glLightfv(GL_LIGHT0, GL_AMBIENT, lightAmb);
     glLightfv(GL_LIGHT0, GL_DIFFUSE, lightDiff);
 
-    glLightfv(GL_LIGHT1, GL_POSITION, lightPos2);
-    glLightfv(GL_LIGHT1, GL_AMBIENT, lightAmb);
-    glLightfv(GL_LIGHT1, GL_SPECULAR, lightSpec);
-
     g_brep = new Brep();
-    //// Cube1
-    //brep->mvfs(1, -1, 1);
-    //BSolid *solid1 = brep->solids.front();
-    //brep->mev(solid1->GetFace(0)->outLoop, solid1->GetVertex(0), 1, 1, 1);
-    //brep->mev(solid1->GetFace(0)->outLoop, solid1->GetVertex(1), -1, 1, 1);
-    //brep->mev(solid1->GetFace(0)->outLoop, solid1->GetVertex(2), -1, -1, 1);
-    //brep->mef(solid1->GetFace(0)->outLoop, solid1->GetVertex(3), solid1->GetVertex(0));
-    //brep->mev(solid1->GetFace(1)->outLoop, solid1->GetVertex(0), 1, -1, -1);
-    //brep->mev(solid1->GetFace(1)->outLoop, solid1->GetVertex(4), 1, 1, -1);
-    //brep->mef(solid1->GetFace(1)->outLoop, solid1->GetVertex(5), solid1->GetVertex(1));
-    //brep->mev(solid1->GetFace(2)->outLoop, solid1->GetVertex(5), -1, 1, -1);
-    //brep->mef(solid1->GetFace(2)->outLoop, solid1->GetVertex(6), solid1->GetVertex(2));
-    //brep->mev(solid1->GetFace(3)->outLoop, solid1->GetVertex(6), -1, -1, -1);
-    //brep->mef(solid1->GetFace(3)->outLoop, solid1->GetVertex(7), solid1->GetVertex(3));
-    //brep->mef(solid1->GetFace(4)->outLoop, solid1->GetVertex(7), solid1->GetVertex(4));
+    //// 2 Cubes
+    //g_brep->mvfs(1, -1, 1);
+    //BSolid *solid1 = g_brep->solids.front();
+    ///* 前面0 */
+    //g_brep->mev(solid1->GetFace(0)->outLoop, solid1->GetVertex(0), 1, 1, 1);
+    //g_brep->mev(solid1->GetFace(0)->outLoop, solid1->GetVertex(1), -1, 1, 1);
+    //g_brep->mev(solid1->GetFace(0)->outLoop, solid1->GetVertex(2), -1, -1, 1);
+    //g_brep->mef(solid1->GetFace(0)->outLoop, solid1->GetVertex(3), solid1->GetVertex(0));
+    ///* 右侧面1 */
+    //g_brep->mev(solid1->GetFace(1)->outLoop, solid1->GetVertex(0), 1, -1, -1);
+    //g_brep->mev(solid1->GetFace(1)->outLoop, solid1->GetVertex(4), 1, 1, -1);
+    //g_brep->mef(solid1->GetFace(1)->outLoop, solid1->GetVertex(5), solid1->GetVertex(1));
+    ///* 上面2 */
+    //g_brep->mev(solid1->GetFace(2)->outLoop, solid1->GetVertex(5), -1, 1, -1);
+    //g_brep->mef(solid1->GetFace(2)->outLoop, solid1->GetVertex(6), solid1->GetVertex(2));
+    ///* 左侧面3 */
+    //g_brep->mev(solid1->GetFace(3)->outLoop, solid1->GetVertex(6), -1, -1, -1);
+    //g_brep->mef(solid1->GetFace(3)->outLoop, solid1->GetVertex(7), solid1->GetVertex(3));
+    ///* 下面4 */
+    //g_brep->mef(solid1->GetFace(4)->outLoop, solid1->GetVertex(7), solid1->GetVertex(4));
+    ///* 后面5自然形成 */
 
-    //// Cube2
-    //brep->mvfs(0.5, 1, 0.5);
-    //BSolid *solid2 = brep->solids.back();
-    //brep->mev(solid2->GetFace(0)->outLoop, solid2->GetVertex(0), 0.5, 2, 0.5);
-    //brep->mev(solid2->GetFace(0)->outLoop, solid2->GetVertex(1), -0.5, 2, 0.5);
-    //brep->mev(solid2->GetFace(0)->outLoop, solid2->GetVertex(2), -0.5, 1, 0.5);
-    //brep->mef(solid2->GetFace(0)->outLoop, solid2->GetVertex(3), solid2->GetVertex(0));
-    //brep->mev(solid2->GetFace(1)->outLoop, solid2->GetVertex(0), 0.5, 1, -0.5);
-    //brep->mev(solid2->GetFace(1)->outLoop, solid2->GetVertex(4), 0.5, 2, -0.5);
-    //brep->mef(solid2->GetFace(1)->outLoop, solid2->GetVertex(5), solid2->GetVertex(1));
-    //brep->mev(solid2->GetFace(2)->outLoop, solid2->GetVertex(5), -0.5, 2, -0.5);
-    //brep->mef(solid2->GetFace(2)->outLoop, solid2->GetVertex(6), solid2->GetVertex(2));
-    //brep->mev(solid2->GetFace(3)->outLoop, solid2->GetVertex(6), -0.5, 1, -0.5);
-    //brep->mef(solid2->GetFace(3)->outLoop, solid2->GetVertex(7), solid2->GetVertex(3));
-    //brep->mef(solid2->GetFace(4)->outLoop, solid2->GetVertex(7), solid2->GetVertex(4));
+    //g_brep->mvfs(0.5, 1, 0.5);
+    //BSolid *solid2 = g_brep->solids.back();
+    //g_brep->mev(solid2->GetFace(0)->outLoop, solid2->GetVertex(0), 0.5, 2, 0.5);
+    //g_brep->mev(solid2->GetFace(0)->outLoop, solid2->GetVertex(1), -0.5, 2, 0.5);
+    //g_brep->mev(solid2->GetFace(0)->outLoop, solid2->GetVertex(2), -0.5, 1, 0.5);
+    //g_brep->mef(solid2->GetFace(0)->outLoop, solid2->GetVertex(3), solid2->GetVertex(0));
+    //g_brep->mev(solid2->GetFace(1)->outLoop, solid2->GetVertex(0), 0.5, 1, -0.5);
+    //g_brep->mev(solid2->GetFace(1)->outLoop, solid2->GetVertex(4), 0.5, 2, -0.5);
+    //g_brep->mef(solid2->GetFace(1)->outLoop, solid2->GetVertex(5), solid2->GetVertex(1));
+    //g_brep->mev(solid2->GetFace(2)->outLoop, solid2->GetVertex(5), -0.5, 2, -0.5);
+    //g_brep->mef(solid2->GetFace(2)->outLoop, solid2->GetVertex(6), solid2->GetVertex(2));
+    //g_brep->mev(solid2->GetFace(3)->outLoop, solid2->GetVertex(6), -0.5, 1, -0.5);
+    //g_brep->mef(solid2->GetFace(3)->outLoop, solid2->GetVertex(7), solid2->GetVertex(3));
+    //g_brep->mef(solid2->GetFace(4)->outLoop, solid2->GetVertex(7), solid2->GetVertex(4));
+    ///* 删除贴合面，solid1的上面为外侧，solid2的下面为内侧 */
+    //g_brep->kfmhr(solid1->GetFace(2), solid2->GetFace(4));
+    //g_brep->dump();
 
-    //brep->kfmhr(solid1->GetFace(2), solid2->GetFace(5));
-
-    // sweep3
-    g_brep->mvfs(0.5, 1, 0.5);
+    // sweep
+    g_brep->mvfs(1, 0.5, 0.5);
     BSolid *solid3 = g_brep->solids.back();
-    g_brep->mev(solid3->GetFace(0)->outLoop, solid3->GetVertex(0), 0.5, 2, 0.5);
-    g_brep->mev(solid3->GetFace(0)->outLoop, solid3->GetVertex(1), 0, 2, 0.5);
-    g_brep->mev(solid3->GetFace(0)->outLoop, solid3->GetVertex(2), -0.5, 2, 0.5);
-    g_brep->mev(solid3->GetFace(0)->outLoop, solid3->GetVertex(3), -0.5, 1, 0.5);
-    g_brep->mef(solid3->GetFace(0)->outLoop, solid3->GetVertex(4), solid3->GetVertex(0));
+    /* 外环 */
+    g_brep->mev(solid3->GetFace(0)->outLoop, solid3->GetVertex(0), -1, 0.5, 0.5);
+    g_brep->mev(solid3->GetFace(0)->outLoop, solid3->GetVertex(1), -1, -0.5, 0.5);
+    g_brep->mev(solid3->GetFace(0)->outLoop, solid3->GetVertex(2), 1, -0.5, 0.5);
+    g_brep->mef(solid3->GetFace(0)->outLoop, solid3->GetVertex(3), solid3->GetVertex(0));
 
-    g_brep->mev(solid3->GetFace(0)->outLoop, solid3->GetVertex(2), 0, 1.75, 0.5);
-    g_brep->mev(solid3->GetFace(0)->outLoop, solid3->GetVertex(5), -0.25, 1.75, 0.5);
-    g_brep->mev(solid3->GetFace(0)->outLoop, solid3->GetVertex(6), -0.25, 1.25, 0.5);
-    g_brep->mev(solid3->GetFace(0)->outLoop, solid3->GetVertex(7), 0.25, 1.25, 0.5);
-    g_brep->mev(solid3->GetFace(0)->outLoop, solid3->GetVertex(8), 0.25, 1.75, 0.5);
-    g_brep->mef(solid3->GetFace(0)->outLoop, solid3->GetVertex(5), solid3->GetVertex(6), solid3->GetVertex(9), solid3->GetVertex(8));
-    g_brep->kemr(solid3->GetFace(0)->outLoop, solid3->GetFace(0)->outLoop->findHalfEdgeWithVertex(solid3->GetVertex(2), solid3->GetVertex(5))->edge, solid3->GetVertex(2));
+    /* 内环1 */
+    g_brep->mev(solid3->GetFace(0)->outLoop, solid3->GetVertex(0), 0.75, 0.25, 0.5);
+    g_brep->mev(solid3->GetFace(0)->outLoop, solid3->GetVertex(4), 0.75, -0.25, 0.5);
+    g_brep->mev(solid3->GetFace(0)->outLoop, solid3->GetVertex(5), 0.25, -0.25, 0.5);
+    g_brep->mev(solid3->GetFace(0)->outLoop, solid3->GetVertex(6), 0.25, 0.25, 0.5);
+    g_brep->mef(solid3->GetFace(0)->outLoop, solid3->GetVertex(7), solid3->GetVertex(6), solid3->GetVertex(4), solid3->GetVertex(0));
+    g_brep->kemr(solid3->GetFace(0)->outLoop, solid3->GetFace(0)->outLoop->findHalfEdgeWithVertex(solid3->GetVertex(0), solid3->GetVertex(4))->edge, solid3->GetVertex(0));
     g_brep->dump();
-    g_brep->sweep(solid3, solid3->GetFace(0), 0, 0, -2);
+
+    /* 内环2 */
+    g_brep->mev(solid3->GetFace(0)->outLoop, solid3->GetVertex(1), -0.8, 0.2, 0.5);
+    g_brep->mev(solid3->GetFace(0)->outLoop, solid3->GetVertex(8), -0.2, 0.2, 0.5);
+    g_brep->mev(solid3->GetFace(0)->outLoop, solid3->GetVertex(9), -0.2, -0.2, 0.5);
+    g_brep->mev(solid3->GetFace(0)->outLoop, solid3->GetVertex(10), -0.8, -0.2, 0.5);
+    g_brep->mef(solid3->GetFace(0)->outLoop, solid3->GetVertex(11), solid3->GetVertex(10), solid3->GetVertex(8), solid3->GetVertex(1));
+    g_brep->kemr(solid3->GetFace(0)->outLoop, solid3->GetFace(0)->outLoop->findHalfEdgeWithVertex(solid3->GetVertex(1), solid3->GetVertex(8))->edge, solid3->GetVertex(1));
+    /* 用面0扫成，其法向(0，0，1)，因此扫成方向中的z需小于0 */
+    g_brep->sweep(solid3, solid3->GetFace(0), 0.5, 0, -2);
     g_brep->dump();
 }
 
@@ -356,6 +365,12 @@ GLvoid gl_draw_cb(GLvoid)
         0, 1, 0);
 
     glPushMatrix();
+    static GLfloat lightPos[4];
+    lightPos[0] = 0;
+    lightPos[1] = 1;
+    lightPos[2] = 1;
+    lightPos[3] = 1;
+    glLightfv(GL_LIGHT0, GL_POSITION, lightPos);
     if (renderMode == FACEMODE)
     {
         for (std::list<BSolid *>::iterator solidIt = g_brep->solids.begin(); solidIt != g_brep->solids.end(); ++solidIt)
